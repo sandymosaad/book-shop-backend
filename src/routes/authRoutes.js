@@ -7,7 +7,7 @@ const router = express.Router()
 router.post("/register" , async (req,res)=>{   
  try {
     const {email, userName, password} = req.body
-    console.log(email, userName, password)
+    //console.log(email, userName, password)
     if(!email || !userName || !password){
         return res.status(400).json({
             message:"All fields are required!"
@@ -20,11 +20,13 @@ router.post("/register" , async (req,res)=>{
     }
     if(userName.length<3){
         return res.status(400).json({
-            message:"Username should be at least characters long"
+            message:"Username should be at least 3 characters long"
         })
     }
-
+    //console.log("Checking existing email and username")
     const existingEmail = await User.findOne({email})
+   // console.log("existingEmail")
+    //console.log(existingEmail)
     if(existingEmail)return res.status(400).json({
         message:"Email already exists!"
     })
