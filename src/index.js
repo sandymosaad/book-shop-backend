@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3000
 dotenv.config()
 
 const app = express()
-
+job.start() // Start the cron job
 app.use(express.json())
 app.use(cors())
 
