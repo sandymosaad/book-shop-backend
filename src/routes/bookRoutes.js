@@ -18,7 +18,7 @@ router.post("/",protectRoute, async(req, res)=>{
         console.log(
             title, user, caption, rating, image
         )
-        if(!title || !user || !caption || !rating || !image){
+        if(!title || !caption || !rating || !image){
             return res.status(400).json({
                 message:"All fields are required!"
             })
@@ -29,7 +29,7 @@ router.post("/",protectRoute, async(req, res)=>{
 
         const newBook = new Book({
             title,
-            user:req.user._id,
+            //user:req.user._id,
             caption,
             rating,
             image:imageUrl
