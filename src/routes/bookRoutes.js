@@ -14,9 +14,9 @@ const router = express.Router()
 router.post("/",protectRoute, async(req, res)=>{
     try{
         console.log("req.body", req.body);
-        const {title, user, caption, rating, image} = req.body
+        const {title, caption, rating, image} = req.body
         console.log(
-            title, user, caption, rating, image
+            title, caption, rating, image
         )
         if(!title || !caption || !rating || !image){
             return res.status(400).json({
