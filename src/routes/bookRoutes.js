@@ -13,7 +13,11 @@ const router = express.Router()
 //create book
 router.post("/",protectRoute, async(req, res)=>{
     try{
+        console.log("req.body", req.body);
         const {title, user, caption, rating, image} = req.body
+        console.log(
+            title, user, caption, rating, image
+        )
         if(!title || !user || !caption || !rating || !image){
             return res.status(400).json({
                 message:"All fields are required!"
