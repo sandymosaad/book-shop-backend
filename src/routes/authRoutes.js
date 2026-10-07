@@ -76,6 +76,7 @@ router.post("/login" , async (req,res)=>{
             })
         }
         const user = await User.findOne({email})
+        console.log("user found:", user)
         if(!user){
             return res.status(400).json({
                 message:"Invalid credentials!"
@@ -88,13 +89,14 @@ router.post("/login" , async (req,res)=>{
             })
         }
         const token = await user.generateToken()
+        console.log("user logged in successfully:", user)
         res.status(200).json({
-            message:"User logged in successfully",
+            message:`${user.userName} logged in successfully`,
             token,
             user:{
                 id:user._id,
                 email:user.email,
-                username:user.username,
+                userName:user.userName,
                 profileImage:user.profileImage
             }
         })
