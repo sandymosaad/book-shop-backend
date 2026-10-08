@@ -1,20 +1,34 @@
 import express from "express";
+import multer from "multer";
+import { unlink } from "node:fs/promises";
 import cloudinary from "../lib/cloudinary.js";
 import Book from "../models/Book.js";
 import {protectRoute} from "../middleware/auth.middleware.js";
 
 const router = express.Router();
+const upload = multer({
+  dest: "uploads/",
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, callback) => {
+    if (!file.mimetype.startsWith("image/")) {
+      return callback(new Error("Please upload an image file"));
+    }
+    callback(null, true);
+  },
+});
 
-router.post("/", protectRoute, async (req, res) => {
+router.post("/", protectRoute, upload.single("image"), async (req, res) => {
   try {
-    const { title, caption, rating, image } = req.body;
+    const { title, caption, rating } = req.body;
+    const imageFile = req.file;
 
-    if (!image || !title || !caption || !rating) {
+    if (!imageFile || !title || !caption || !rating) {
       return res.status(400).json({ message: "Please provide all fields" });
     }
 
-    // upload the image to cloudinary
-    const uploadResponse = await cloudinary.uploader.upload(image);
+    const uploadResponse = await cloudinary.uploader.upload(imageFile.path, {
+      resource_type: "image",
+    });
     const imageUrl = uploadResponse.secure_url;
 
     // save to the database
@@ -36,6 +50,12 @@ router.post("/", protectRoute, async (req, res) => {
       name: error.name,
     });
     res.status(500).json({ message: error.message });
+  } finally {
+    if (req.file?.path) {
+      await unlink(req.file.path).catch((cleanupError) => {
+        console.error("Could not remove temporary image:", cleanupError.message);
+      });
+    }
   }
 });
 
