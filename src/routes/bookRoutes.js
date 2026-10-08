@@ -30,7 +30,11 @@ router.post("/", protectRoute, async (req, res) => {
 
     res.status(201).json(newBook);
   } catch (error) {
-    console.log("Error creating book", error);
+    console.error("Error creating book:", {
+      message: error.message,
+      http_code: error.http_code,
+      name: error.name,
+    });
     res.status(500).json({ message: error.message });
   }
 });
