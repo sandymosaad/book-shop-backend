@@ -25,8 +25,9 @@ router.post("/",protectRoute, async(req, res)=>{
         }
 
         const uploadResponse = await cloudinary.uploader.upload(image)
+        console.log("uploadResponse", uploadResponse);
         const imageUrl = uploadResponse.secure_url
-
+        console.log("imageUrl", imageUrl);
         const newBook = new Book({
             title,
             //user:req.user._id,
@@ -34,6 +35,7 @@ router.post("/",protectRoute, async(req, res)=>{
             rating,
             image:imageUrl
         })
+        console.log("newBook", newBook);
         await newBook.save()
         res.status(201).json({
             message:"Book created successfully",
