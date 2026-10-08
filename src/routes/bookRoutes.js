@@ -1,43 +1,24 @@
 import express from "express";
-import multer from "multer";
-import { unlink } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import cloudinary from "../lib/cloudinary.js";
 import Book from "../models/Book.js";
 import {protectRoute} from "../middleware/auth.middleware.js";
 
 const router = express.Router();
-const upload = multer({
-  dest: tmpdir(),
-  limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter: (_req, file, callback) => {
-    if (!file.mimetype.startsWith("image/")) {
-      return callback(new Error("Please upload an image file"));
-    }
-    callback(null, true);
-  },
-});
 
-router.post("/", protectRoute, upload.single("image"), async (req, res) => {
+router.post("/", protectRoute, async (req, res) => {
   try {
-    const { title, caption, rating } = req.body;
-    const imageFile = req.file;
+    const { title, caption, rating, image } = req.body;
 
-    if (!imageFile || !title || !caption || !rating) {
+    if (!image || !title || !caption || !rating) {
       return res.status(400).json({ message: "Please provide all fields" });
     }
-
-    const uploadResponse = await cloudinary.uploader.upload(imageFile.path, {
-      resource_type: "image",
-    });
-    const imageUrl = uploadResponse.secure_url;
 
     // save to the database
     const newBook = new Book({
       title,
       caption,
       rating,
-      image: imageUrl,
+      image,
       user: req.user._id,
     });
 
@@ -45,37 +26,9 @@ router.post("/", protectRoute, upload.single("image"), async (req, res) => {
 
     res.status(201).json(newBook);
   } catch (error) {
-    console.error("Error creating book:", {
-      message: error.message,
-      cloudinary_message: error.error?.message,
-      http_code: error.http_code,
-      name: error.name,
-      request_id: error.error?.request_id,
-    });
-    res.status(error.http_code || 500).json({
-      message: error.error?.message || error.message || "Image upload failed",
-      code: error.error?.http_code || error.http_code,
-      requestId: error.error?.request_id,
-    });
-  } finally {
-    if (req.file?.path) {
-      await unlink(req.file.path).catch((cleanupError) => {
-        console.error("Could not remove temporary image:", cleanupError.message);
-      });
-    }
+    console.error("Error creating book:", error.message);
+    res.status(500).json({ message: error.message || "Could not save book" });
   }
-});
-
-router.use((error, _req, res, _next) => {
-  if (error instanceof multer.MulterError) {
-    return res.status(error.code === "LIMIT_FILE_SIZE" ? 413 : 400).json({
-      message: error.code === "LIMIT_FILE_SIZE"
-        ? "Image must be 10 MB or smaller"
-        : "Could not process the uploaded image",
-    });
-  }
-
-  return res.status(400).json({ message: error.message || "Image upload failed" });
 });
 
 // pagination => infinite loading
