@@ -16,7 +16,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(cors())
 
 app.use("/api/auth", authRoutes)
-app.use("/api/book", bookRoutes)
+app.use("/api/books", bookRoutes)
 
 app.listen(PORT,()=>{
     console.log(`port ${PORT} run`)
