@@ -1,13 +1,14 @@
 import express from "express";
 import multer from "multer";
 import { unlink } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import cloudinary from "../lib/cloudinary.js";
 import Book from "../models/Book.js";
 import {protectRoute} from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 const upload = multer({
-  dest: "uploads/",
+  dest: tmpdir(),
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, callback) => {
     if (!file.mimetype.startsWith("image/")) {
@@ -46,10 +47,14 @@ router.post("/", protectRoute, upload.single("image"), async (req, res) => {
   } catch (error) {
     console.error("Error creating book:", {
       message: error.message,
+      cloudinary_message: error.error?.message,
       http_code: error.http_code,
       name: error.name,
     });
-    res.status(500).json({ message: error.message });
+    res.status(error.http_code || 500).json({
+      message: error.error?.message || error.message || "Image upload failed",
+      code: error.error?.http_code || error.http_code,
+    });
   } finally {
     if (req.file?.path) {
       await unlink(req.file.path).catch((cleanupError) => {
@@ -57,6 +62,18 @@ router.post("/", protectRoute, upload.single("image"), async (req, res) => {
       });
     }
   }
+});
+
+router.use((error, _req, res, _next) => {
+  if (error instanceof multer.MulterError) {
+    return res.status(error.code === "LIMIT_FILE_SIZE" ? 413 : 400).json({
+      message: error.code === "LIMIT_FILE_SIZE"
+        ? "Image must be 10 MB or smaller"
+        : "Could not process the uploaded image",
+    });
+  }
+
+  return res.status(400).json({ message: error.message || "Image upload failed" });
 });
 
 // pagination => infinite loading
