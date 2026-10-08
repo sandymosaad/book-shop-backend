@@ -50,10 +50,12 @@ router.post("/", protectRoute, upload.single("image"), async (req, res) => {
       cloudinary_message: error.error?.message,
       http_code: error.http_code,
       name: error.name,
+      request_id: error.error?.request_id,
     });
     res.status(error.http_code || 500).json({
       message: error.error?.message || error.message || "Image upload failed",
       code: error.error?.http_code || error.http_code,
+      requestId: error.error?.request_id,
     });
   } finally {
     if (req.file?.path) {
