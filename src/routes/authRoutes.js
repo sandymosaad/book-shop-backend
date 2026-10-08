@@ -95,7 +95,8 @@ router.post("/login" , async (req,res)=>{
                 id:user._id,
                 email:user.email,
                 userName:user.userName,
-                profileImage:user.profileImage
+                profileImage:user.profileImage,
+                createdAt:user.createdAt
             }
         })
     }
